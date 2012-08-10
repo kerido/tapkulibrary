@@ -635,6 +635,8 @@
 @property (strong,nonatomic) UIButton *leftArrow;
 @property (strong,nonatomic) UIButton *rightArrow;
 @property (strong,nonatomic) UIImageView *shadow;
+
++ (NSString *) formatMonthYear:(NSDate *)theDate;
 @end
 
 #pragma mark -
@@ -642,10 +644,15 @@
 @synthesize delegate,dataSource;
 
 
-- (id) init{
-	self = [self initWithSundayAsFirst:YES];
+- (id) init
+{
+	NSCalendar * aCal = [NSCalendar currentCalendar];
+	NSUInteger aFirstDay = [aCal firstWeekday];
+
+	self = [self initWithSundayAsFirst:aFirstDay == 1];
 	return self;
 }
+
 - (id) initWithSundayAsFirst:(BOOL)s{
 	if (!(self = [super initWithFrame:CGRectZero])) return nil;
 	self.backgroundColor = [UIColor grayColor];
@@ -661,9 +668,8 @@
 	self.topBackground.frame = CGRectMake(0, 0, self.bounds.size.width, self.topBackground.frame.size.height);
 	[self.tileBox addSubview:currentTile];
 	[self addSubview:self.tileBox];
-	
-	NSDate *date = [NSDate date];
-	self.monthYear.text = [NSString stringWithFormat:@"%@ %@",[date monthString],[date yearString]];
+
+	self.monthYear.text = [self.class formatMonthYear:[NSDate date] ];
 	[self addSubview:self.monthYear];
 	
 	
@@ -671,7 +677,6 @@
 	[self addSubview:self.rightArrow];
 	[self addSubview:self.shadow];
 	self.shadow.frame = CGRectMake(0, self.frame.size.height-self.shadow.frame.size.height+21, self.bounds.size.width, self.shadow.frame.size.height);
-	
 	
 	NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
 	[dateFormat setDateFormat:@"eee"];
@@ -820,11 +825,9 @@
 	
 	
 	
-	monthYear.text = [NSString stringWithFormat:@"%@ %@",[localNextMonth monthString],[localNextMonth yearString]];
-	
-	
-
+	monthYear.text = [self.class formatMonthYear:localNextMonth];
 }
+
 - (void) changeMonth:(UIButton *)sender{
 	
 	NSDate *newDate = [self dateForMonthChange:sender];
@@ -884,7 +887,7 @@
 		self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.bounds.size.width, self.tileBox.frame.size.height+self.tileBox.frame.origin.y);
 
 		self.shadow.frame = CGRectMake(0, self.frame.size.height-self.shadow.frame.size.height+21, self.shadow.frame.size.width, self.shadow.frame.size.height);
-		self.monthYear.text = [NSString stringWithFormat:@"%@ %@",[date monthString],[date yearString]];
+		self.monthYear.text = [self.class formatMonthYear:date];
 		[currentTile selectDay:info.day];
 		
 		if([self.delegate respondsToSelector:@selector(calendarMonthView:monthDidChange:animated:)])
@@ -1000,6 +1003,14 @@
 		shadow = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:TKBUNDLE(@"TapkuLibrary.bundle/Images/calendar/Month Calendar Shadow.png")]];
 	}
 	return shadow;
+}
+
++ (NSString *) formatMonthYear:(NSDate *)theDate
+{
+	NSString * aFmtString = [NSDateFormatter dateFormatFromTemplate:@"MMMM yyyy" options:0 locale:[NSLocale currentLocale] ];
+	NSDateFormatter * aFormatter = [[NSDateFormatter alloc] init];
+	[aFormatter setDateFormat:aFmtString];
+	return [aFormatter stringFromDate:theDate];
 }
 
 @end
